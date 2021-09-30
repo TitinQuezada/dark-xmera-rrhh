@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { DocumentData } from 'firebase/firestore';
 import { Tables } from 'src/enums/tables.enum';
-import { Position } from 'src/interfaces/employee/position.interface';
 import { PositionModel } from 'src/models/employee/position-model.interface';
 import { OperationResult } from 'src/utils/operation-result';
 import { PositionCreateOrEditViewModel } from 'src/view-models/position/position-create-or-edit-view-model';
@@ -10,7 +9,7 @@ import Database from '../utils/database';
 
 @Injectable()
 export class PositionsService {
-  async getAll(): Promise<OperationResult<Array<Position>>> {
+  async getAll(): Promise<OperationResult<Array<PositionViewModel>>> {
     try {
       const positions = await Database.getAll(Tables.Positions);
 
@@ -24,7 +23,7 @@ export class PositionsService {
     }
   }
 
-  async getById(id: string): Promise<OperationResult<Position>> {
+  async getById(id: string): Promise<OperationResult<PositionViewModel>> {
     try {
       const position = await Database.getById(Tables.Positions, id);
 
@@ -86,7 +85,7 @@ export class PositionsService {
     );
 
     if (!deparment) {
-      return 'El departamento de la posición seleccionado no existe';
+      return 'El departamento seleccionado no existe';
     }
   }
 

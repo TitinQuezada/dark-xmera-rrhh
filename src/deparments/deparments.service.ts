@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { DocumentData } from 'firebase/firestore';
 import { Tables } from 'src/enums/tables.enum';
-import { Deparment } from 'src/interfaces/deparment/deparment.interface';
 import { DeparmentModel } from 'src/models/deparment/deparment-model.interface';
 import Database from 'src/utils/database';
 import { OperationResult } from 'src/utils/operation-result';

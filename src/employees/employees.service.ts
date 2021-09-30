@@ -13,22 +13,30 @@ import { ContactModel } from 'src/models/employee/contact-model';
 import { EmergencyContactModel } from 'src/models/employee/emergency-contact-model.interface';
 import { EmployeeModel } from 'src/models/employee/employee.-model.interface';
 import { OperationResult } from 'src/utils/operation-result';
+import { AcademicTrainingCreateOrEditViewModel } from 'src/view-models/academic-training/academic-training-create-or-edit-view-model';
+import { AddressCreateOrEditViewModel } from 'src/view-models/address/address-create-or-edit-view-model';
+import { ContactCreateOrEditViewModel } from 'src/view-models/contact/contact-create-or-edit-view-model';
+import { EmergencyContactCreateOrEditViewModel } from 'src/view-models/emergency-contact/emergency-contact-create-or-edit-view-model';
+import { EmployeeCreateOrEditViewModel } from 'src/view-models/employee/employee-create-or-edit-view-model';
+import { EmployeeViewModel } from 'src/view-models/employee/employee-view-model';
 import Database from '../utils/database';
 
 @Injectable()
 export class EmployeesService {
-  async getAll(): Promise<OperationResult<Array<Employee>>> {
+  async getAll(): Promise<OperationResult<Array<EmployeeViewModel>>> {
     try {
-      const users = await Database.getAll(Tables.Employees);
-      const usersResult = users.map((user) => this.buildEmployee(user));
+      const employees = await Database.getAll(Tables.Employees);
+      const employeesResult = employees.map((employee) =>
+        this.buildEmployee(employee),
+      );
 
-      return OperationResult.ok(usersResult);
+      return OperationResult.ok(employeesResult);
     } catch (error) {
       return OperationResult.fail(error.message);
     }
   }
 
-  buildEmployee(document: DocumentData): Employee {
+  buildEmployee(document: DocumentData): EmployeeViewModel {
     return {
       id: document.id,
       employeeCode: document.employeeCode,
@@ -40,28 +48,31 @@ export class EmployeesService {
       dateOfBirth: document.dateOfBirth,
       dateOfHired: document.dateOfHired,
       positionId: document.positionId,
-      contacts: [],
-      address: {
-        street: '',
-        municipalityId: '',
-        zipCode: 123456,
-        aditionalDetail: '',
-      },
+      //contacts: [],
+      // address: {
+      //   street: '',
+      //   municipalityId: '',
+      //   zipCode: 123456,
+      //   aditionalDetail: '',
+      // },
       observations: document.observations,
-      academicTrainings: document.academicTrainings,
-      emergencyContacts: document.emergencyContacts,
+      //  academicTrainings: document.academicTrainings,
+      // emergencyContacts: document.emergencyContacts,
     };
   }
 
-  async create(employee: Employee): Promise<OperationResult<void>> {
+  async create(
+    employee: EmployeeCreateOrEditViewModel,
+  ): Promise<OperationResult<void>> {
     try {
-      const validateEmployeeResult = this.validateEmployee(employee);
+      const validateEmployeeResult = await this.validateEmployee(employee);
 
       if (validateEmployeeResult) {
         return OperationResult.fail(validateEmployeeResult);
       }
 
       const employeeToCreate = this.buildEmployeeModel(employee);
+      employeeToCreate.employeeCode = this.generateCode(employee);
 
       const createdEmployeeId = await Database.create(
         Tables.Employees,
@@ -110,7 +121,9 @@ export class EmployeesService {
     }
   }
 
-  private validateEmployee(employee: EmployeeModel): string {
+  private async validateEmployee(
+    employee: EmployeeCreateOrEditViewModel,
+  ): Promise<string> {
     if (!employee.name) {
       return 'El nombre del empleado es requerido';
     }
@@ -123,8 +136,28 @@ export class EmployeesService {
       return 'La identificación del empleado es requerida';
     }
 
+    const employeesWithEqualsIdentificationNumber = await Database.get(
+      Tables.Employees,
+      'identificationNumber',
+      employee.identificationNumber,
+    );
+
+    if (employeesWithEqualsIdentificationNumber.length) {
+      return 'El documento de identidad ya se encuentra registrado';
+    }
+
     if (!employee.email) {
       return 'El correo eléctronico del empleado es requerido';
+    }
+
+    const employeesWithEqualsEmail = await Database.get(
+      Tables.Employees,
+      'email',
+      employee.email,
+    );
+
+    if (employeesWithEqualsEmail.length) {
+      return 'El correo electronico ya se encuentra registrado';
     }
 
     if (!employee.gender) {
@@ -142,9 +175,20 @@ export class EmployeesService {
     if (!employee.positionId) {
       return 'La posición del empleado es requerida';
     }
+
+    const position = await Database.getById(
+      Tables.Positions,
+      employee.positionId,
+    );
+
+    if (!position) {
+      return 'La posición seleccionada no existe';
+    }
   }
 
-  private buildEmployeeModel(employee: Employee): EmployeeModel {
+  private buildEmployeeModel(
+    employee: EmployeeCreateOrEditViewModel,
+  ): EmployeeModel {
     return {
       employeeCode: employee.employeeCode,
       identificationNumber: employee.identificationNumber,
@@ -160,7 +204,7 @@ export class EmployeesService {
   }
 
   private buildContactModel(
-    contact: Contact,
+    contact: ContactCreateOrEditViewModel,
     employeeId: string,
   ): ContactModel {
     return {
@@ -170,7 +214,9 @@ export class EmployeesService {
     };
   }
 
-  private buildAddressModel(address: Address): AddressModel {
+  private buildAddressModel(
+    address: AddressCreateOrEditViewModel,
+  ): AddressModel {
     return {
       street: address.street,
       municipalityId: address.municipalityId,
@@ -180,7 +226,7 @@ export class EmployeesService {
   }
 
   private buildAcademicTrainingModel(
-    academicTraining: AcademicTraining,
+    academicTraining: AcademicTrainingCreateOrEditViewModel,
     employeeId: string,
   ): AcademicTrainingModel {
     return {
@@ -191,7 +237,7 @@ export class EmployeesService {
   }
 
   private buildEmergencyContactModel(
-    emergencyContact: EmergencyContact,
+    emergencyContact: EmergencyContactCreateOrEditViewModel,
     employeeId: string,
   ): EmergencyContactModel {
     return {
@@ -200,5 +246,20 @@ export class EmployeesService {
       relationshipId: emergencyContact.relationshipId,
       employeeId,
     };
+  }
+
+  generateCode(employee: EmployeeCreateOrEditViewModel): string {
+    const codeLength = 5;
+    const firstPosition = 0;
+
+    let result =
+      employee.name[firstPosition] + employee.lastName[firstPosition];
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+
+    for (var i = 0; i < codeLength; i++) {
+      result += characters.charAt(Math.floor(Math.random() * codeLength));
+    }
+
+    return result.toUpperCase();
   }
 }
