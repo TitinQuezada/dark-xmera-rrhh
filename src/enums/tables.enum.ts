@@ -6,4 +6,5 @@ export enum Tables {
   Address = 'address',
   AcademicTrainings = 'academicTrainings',
   EmergencyContacts = 'emergencyContacts',
+  Genders = 'genders',
 }

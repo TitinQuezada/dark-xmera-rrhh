@@ -23,7 +23,7 @@ export class EmployeeCreateOrEditViewModel {
   email: string;
 
   @ApiProperty()
-  gender: string;
+  genderId: string;
 
   @ApiProperty()
   dateOfBirth: string;
@@ -34,14 +34,14 @@ export class EmployeeCreateOrEditViewModel {
   @ApiProperty()
   positionId: string;
 
+  @ApiProperty()
+  observations?: string;
+
   @ApiProperty({ type: [ContactCreateOrEditViewModel] })
   contacts: Array<ContactCreateOrEditViewModel>;
 
   @ApiProperty()
   address: AddressCreateOrEditViewModel;
-
-  @ApiProperty()
-  observations?: string;
 
   @ApiProperty({ type: [AcademicTrainingCreateOrEditViewModel] })
   academicTrainings: Array<AcademicTrainingCreateOrEditViewModel>;

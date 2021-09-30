@@ -1,17 +1,13 @@
 import { Injectable } from '@nestjs/common';
-import e from 'express';
 import { DocumentData } from 'firebase/firestore';
 import { Tables } from 'src/enums/tables.enum';
-import { AcademicTraining } from 'src/interfaces/employee/academic-training.interface';
-import { Address } from 'src/interfaces/employee/address.interface';
-import { Contact } from 'src/interfaces/employee/contact.interface';
-import { EmergencyContact } from 'src/interfaces/employee/emergency-contact.interface';
-import { Employee } from 'src/interfaces/employee/employee.interface';
 import { AcademicTrainingModel } from 'src/models/employee/academic-training-model.interface';
 import { AddressModel } from 'src/models/employee/address-model.interface';
 import { ContactModel } from 'src/models/employee/contact-model';
 import { EmergencyContactModel } from 'src/models/employee/emergency-contact-model.interface';
 import { EmployeeModel } from 'src/models/employee/employee.-model.interface';
+import Helper from 'src/utils/helper';
+import Moment from 'src/utils/moment';
 import { OperationResult } from 'src/utils/operation-result';
 import { AcademicTrainingCreateOrEditViewModel } from 'src/view-models/academic-training/academic-training-create-or-edit-view-model';
 import { AddressCreateOrEditViewModel } from 'src/view-models/address/address-create-or-edit-view-model';
@@ -132,22 +128,19 @@ export class EmployeesService {
       return 'El apellido del empleado es requerido';
     }
 
-    if (!employee.identificationNumber) {
-      return 'La identificación del empleado es requerida';
-    }
+    const identificationNumberValidation =
+      await this.validateIdentificationNumber(employee);
 
-    const employeesWithEqualsIdentificationNumber = await Database.get(
-      Tables.Employees,
-      'identificationNumber',
-      employee.identificationNumber,
-    );
-
-    if (employeesWithEqualsIdentificationNumber.length) {
-      return 'El documento de identidad ya se encuentra registrado';
+    if (identificationNumberValidation) {
+      return identificationNumberValidation;
     }
 
     if (!employee.email) {
       return 'El correo eléctronico del empleado es requerido';
+    }
+
+    if (!Helper.validateEmail(employee.email)) {
+      return 'El correo eléctronico no es valido';
     }
 
     const employeesWithEqualsEmail = await Database.get(
@@ -160,7 +153,7 @@ export class EmployeesService {
       return 'El correo electronico ya se encuentra registrado';
     }
 
-    if (!employee.gender) {
+    if (!employee.genderId) {
       return 'El genero del empleado es requerido';
     }
 
@@ -168,8 +161,16 @@ export class EmployeesService {
       return 'La fecha de nacimiento del empleado es requerida';
     }
 
+    if (!Moment.isValid(employee.dateOfBirth)) {
+      return 'La fecha de nacimiento no es valida';
+    }
+
     if (!employee.dateOfHired) {
       return 'La fecha de contratación del empleado es requerida';
+    }
+
+    if (!Moment.isValid(employee.dateOfHired)) {
+      return 'La fecha de contratación no es valida';
     }
 
     if (!employee.positionId) {
@@ -186,6 +187,24 @@ export class EmployeesService {
     }
   }
 
+  private async validateIdentificationNumber(
+    employee: EmployeeCreateOrEditViewModel,
+  ) {
+    if (!employee.identificationNumber) {
+      return 'La identificación del empleado es requerida';
+    }
+
+    const employeesWithEqualsIdentificationNumber = await Database.get(
+      Tables.Employees,
+      'identificationNumber',
+      employee.identificationNumber,
+    );
+
+    if (employeesWithEqualsIdentificationNumber.length) {
+      return 'El documento de identidad ya se encuentra registrado';
+    }
+  }
+
   private buildEmployeeModel(
     employee: EmployeeCreateOrEditViewModel,
   ): EmployeeModel {
@@ -195,7 +214,7 @@ export class EmployeesService {
       name: employee.name,
       lastName: employee.lastName,
       email: employee.email,
-      gender: employee.gender,
+      gender: employee.genderId,
       dateOfBirth: employee.dateOfBirth,
       dateOfHired: employee.dateOfHired,
       positionId: employee.positionId,
