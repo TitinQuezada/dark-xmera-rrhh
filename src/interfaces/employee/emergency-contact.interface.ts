@@ -4,5 +4,5 @@ export interface EmergencyContact {
   lastname: string;
   residentialPhone: string;
   cellPhone: string;
-  relationship: string;
+  relationshipId: string;
 }

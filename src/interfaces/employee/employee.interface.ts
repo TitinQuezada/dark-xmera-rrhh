@@ -1,4 +1,6 @@
 import { AcademicTraining } from './academic-training.interface';
+import { Address } from './address.interface';
+import { Contact } from './contact.interface';
 import { EmergencyContact } from './emergency-contact.interface';
 
 export interface Employee {
@@ -11,10 +13,9 @@ export interface Employee {
   gender: string;
   dateOfBirth: string;
   dateOfHired: string;
-  position: string;
-  recidentialPhone?: string;
-  cellPhone: string;
-  address: string;
+  positionId: string;
+  contacts: Array<Contact>;
+  address: Address;
   observations?: string;
   academicTrainings: Array<AcademicTraining>;
   emergencyContacts: Array<EmergencyContact>;

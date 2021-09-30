@@ -1,4 +1,4 @@
-export interface Employee {
+export interface EmployeeModel {
   id?: string;
   employeeCode: string;
   identificationNumber: string;
@@ -9,6 +9,6 @@ export interface Employee {
   dateOfBirth: string;
   dateOfHired: string;
   positionId: string;
-  addressId: string;
+  addressId?: string;
   observations?: string;
 }

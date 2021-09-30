@@ -2,12 +2,16 @@ import { initializeApp } from '@firebase/app';
 import {
   addDoc,
   collection,
+  deleteDoc,
   doc,
   DocumentData,
   Firestore,
   getDoc,
   getDocs,
   getFirestore,
+  query,
+  updateDoc,
+  where,
 } from 'firebase/firestore';
 
 import FirebaseConfiguration from '../configuration/firebase.configuration';
@@ -40,9 +44,40 @@ class Database {
     return docSnap.data();
   }
 
-  async create(tableName: string, document: any): Promise<void> {
+  async get(
+    tableName: string,
+    filterKey: string,
+    filterValue: any,
+  ): Promise<Array<DocumentData>> {
+    const data: Array<DocumentData> = [];
     const collectionReference = collection(this.database, tableName);
-    await addDoc(collectionReference, document);
+    const queryResult = query(
+      collectionReference,
+      where(filterKey, '==', filterValue),
+    );
+    const querySnapshot = await getDocs(queryResult);
+
+    querySnapshot.forEach((document) => {
+      data.push({ id: document.id, ...document.data() });
+    });
+
+    return data;
+  }
+
+  async create(tableName: string, document: any): Promise<string> {
+    const collectionReference = collection(this.database, tableName);
+    const createdDocument = await addDoc(collectionReference, document);
+    return createdDocument.id;
+  }
+
+  async update(tableName: string, id: string, document: any): Promise<void> {
+    const docRef = doc(this.database, tableName, id);
+    await updateDoc(docRef, document);
+  }
+
+  async delete(tableName: string, id: string): Promise<void> {
+    const docRef = doc(this.database, tableName, id);
+    await deleteDoc(docRef);
   }
 }
 

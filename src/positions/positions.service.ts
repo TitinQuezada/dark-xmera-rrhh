@@ -3,45 +3,72 @@ import { DocumentData } from 'firebase/firestore';
 import { Tables } from 'src/enums/tables.enum';
 import { Position } from 'src/interfaces/employee/position.interface';
 import { PositionModel } from 'src/models/employee/position-model.interface';
+import { OperationResult } from 'src/utils/operation-result';
+import { PositionCreateOrEditViewModel } from 'src/view-models/position/position-create-or-edit-view-model';
+import { PositionViewModel } from 'src/view-models/position/position-view-model';
 import Database from '../utils/database';
 
 @Injectable()
 export class PositionsService {
-  async getAll(): Promise<Array<Position>> {
-    const positionsResult = [];
-    const positions = await Database.getAll(Tables.Positions);
+  async getAll(): Promise<OperationResult<Array<Position>>> {
+    try {
+      const positions = await Database.getAll(Tables.Positions);
 
-    for (let index = 0; index < positions.length; index++) {
-      const positionResult = await this.buildPosition(positions[index]);
-      positionsResult.push(positionResult);
+      const positionsResult = positions.map((position) =>
+        this.buildPosition(position),
+      );
+
+      return OperationResult.ok(positionsResult);
+    } catch (error) {
+      return OperationResult.fail(error.message);
     }
-
-    return positionsResult;
   }
 
-  async buildPosition(document: DocumentData): Promise<Position> {
-    const deparment = await Database.getById(
-      Tables.Deparments,
-      document.deparmentId,
-    );
+  async getById(id: string): Promise<OperationResult<Position>> {
+    try {
+      const position = await Database.getById(Tables.Positions, id);
 
+      if (!position) {
+        return OperationResult.fail('Posición no encontrada');
+      }
+
+      const positionResult = this.buildPosition(position);
+
+      return OperationResult.ok(positionResult);
+    } catch (error) {
+      return OperationResult.fail(error.message);
+    }
+  }
+
+  buildPosition(document: DocumentData): PositionViewModel {
     return {
       id: document.id,
       name: document.name,
-      deparment: deparment.name,
+      deparmentId: document.deparmentId,
+      createdDate: document.createdDate.toDate(),
+      updatedDate: document.updatedDate?.toDate(),
     };
   }
 
-  async create(position: PositionModel): Promise<void> {
-    const validatePositionResult = await this.validatePosition(position);
+  async create(
+    position: PositionCreateOrEditViewModel,
+  ): Promise<OperationResult<void>> {
+    try {
+      const validatePositionResult = await this.validatePosition(position);
 
-    if (validatePositionResult) {
-      throw new Error(validatePositionResult);
+      if (validatePositionResult) {
+        return OperationResult.fail(validatePositionResult);
+      }
+
+      const positionToCreate = this.buildPositionModel(position);
+      positionToCreate.createdDate = new Date();
+
+      await Database.create(Tables.Positions, positionToCreate);
+
+      return OperationResult.ok();
+    } catch (error) {
+      return OperationResult.fail(error.message);
     }
-
-    const positionToCreate = this.buildPositionModel(position);
-
-    await Database.create(Tables.Positions, positionToCreate);
   }
 
   private async validatePosition(position: PositionModel): Promise<string> {
@@ -63,10 +90,49 @@ export class PositionsService {
     }
   }
 
-  private buildPositionModel(position: PositionModel): PositionModel {
+  private buildPositionModel(
+    position: PositionCreateOrEditViewModel,
+  ): PositionModel {
     return {
       name: position.name,
       deparmentId: position.deparmentId,
+      createdDate: position.createdDate,
+      updatedDate: position.updatedDate || null,
     };
+  }
+
+  async update(
+    id: string,
+    position: PositionModel,
+  ): Promise<OperationResult<void>> {
+    try {
+      const validatePositionResult = await this.validatePosition(position);
+
+      if (validatePositionResult) {
+        return OperationResult.fail(validatePositionResult);
+      }
+
+      const positionInDb = await Database.getById(Tables.Positions, id);
+      const positionToUpdate = this.buildPositionModel(position);
+
+      positionToUpdate.createdDate = positionInDb.createdDate;
+      positionToUpdate.updatedDate = new Date();
+
+      await Database.update(Tables.Positions, id, positionToUpdate);
+
+      return OperationResult.ok();
+    } catch (error) {
+      return OperationResult.fail(error.message);
+    }
+  }
+
+  async delete(id: string): Promise<OperationResult<void>> {
+    try {
+      await Database.delete(Tables.Positions, id);
+
+      return OperationResult.ok();
+    } catch (error) {
+      return OperationResult.fail(error.message);
+    }
   }
 }

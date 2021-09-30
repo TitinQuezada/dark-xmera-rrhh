@@ -1,5 +1,7 @@
 export interface Position {
   id?: string;
   name: string;
-  deparment: string;
+  deparmentId: string;
+  createdDate: Date;
+  updatedDate: Date;
 }

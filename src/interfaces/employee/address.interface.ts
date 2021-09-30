@@ -1,7 +1,7 @@
 export interface Address {
   id?: string;
   street: string;
-  municipality: string;
+  municipalityId: string;
   zipCode: number;
   aditionalDetail: string;
 }
