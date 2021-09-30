@@ -157,6 +157,12 @@ export class EmployeesService {
       return 'El genero del empleado es requerido';
     }
 
+    const gender = await Database.getById(Tables.Genders, employee.genderId);
+
+    if (!gender) {
+      return 'El genero seleccionado no existe';
+    }
+
     if (!employee.dateOfBirth) {
       return 'La fecha de nacimiento del empleado es requerida';
     }
