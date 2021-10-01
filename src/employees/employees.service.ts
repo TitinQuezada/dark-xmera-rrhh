@@ -44,6 +44,7 @@ export class EmployeesService {
       dateOfBirth: document.dateOfBirth,
       dateOfHired: document.dateOfHired,
       positionId: document.positionId,
+      addressId: document.addressId,
       //contacts: [],
       // address: {
       //   street: '',
@@ -62,13 +63,23 @@ export class EmployeesService {
   ): Promise<OperationResult<void>> {
     try {
       const validateEmployeeResult = await this.validateEmployee(employee);
+      const validateContactResult = await this.validateContacts(
+        employee.contacts,
+      );
 
-      if (validateEmployeeResult) {
-        return OperationResult.fail(validateEmployeeResult);
+      if (validateEmployeeResult || validateContactResult) {
+        return OperationResult.fail(
+          validateEmployeeResult || validateContactResult,
+        );
       }
 
+      const addressToCreate = this.buildAddressModel(employee.address);
+      const addressId = await Database.create(Tables.Address, addressToCreate);
+
       const employeeToCreate = this.buildEmployeeModel(employee);
+
       employeeToCreate.employeeCode = this.generateCode(employee);
+      employeeToCreate.addressId = addressId;
 
       const createdEmployeeId = await Database.create(
         Tables.Employees,
@@ -83,9 +94,6 @@ export class EmployeesService {
 
         await Database.create(Tables.Contacts, contactToCreate);
       }
-
-      const addressToCreate = this.buildAddressModel(employee.address);
-      await Database.create(Tables.Address, addressToCreate);
 
       for (let index = 0; index < employee.academicTrainings.length; index++) {
         const academicTrainingToCreate = this.buildAcademicTrainingModel(
@@ -120,6 +128,47 @@ export class EmployeesService {
   private async validateEmployee(
     employee: EmployeeCreateOrEditViewModel,
   ): Promise<string> {
+    const namesValidationResult = this.validateNames(employee);
+
+    if (namesValidationResult) {
+      return namesValidationResult;
+    }
+
+    const identificationNumberValidationResult =
+      await this.validateIdentificationNumber(employee.identificationNumber);
+
+    if (identificationNumberValidationResult) {
+      return identificationNumberValidationResult;
+    }
+
+    const emailValidationResult = await this.validateEmail(employee.email);
+
+    if (emailValidationResult) {
+      return emailValidationResult;
+    }
+
+    const genderValidationResult = await this.validateGender(employee.genderId);
+
+    if (genderValidationResult) {
+      return genderValidationResult;
+    }
+
+    const datesValidationResult = this.validateDates(employee);
+
+    if (datesValidationResult) {
+      return datesValidationResult;
+    }
+
+    const positionIdValidationResult = this.validatePositionId(
+      employee.positionId,
+    );
+
+    if (positionIdValidationResult) {
+      return positionIdValidationResult;
+    }
+  }
+
+  private validateNames(employee: EmployeeCreateOrEditViewModel) {
     if (!employee.name) {
       return 'El nombre del empleado es requerido';
     }
@@ -127,42 +176,57 @@ export class EmployeesService {
     if (!employee.lastName) {
       return 'El apellido del empleado es requerido';
     }
+  }
 
-    const identificationNumberValidation =
-      await this.validateIdentificationNumber(employee);
-
-    if (identificationNumberValidation) {
-      return identificationNumberValidation;
+  private async validateIdentificationNumber(identificationNumber: string) {
+    if (!identificationNumber) {
+      return 'La identificación del empleado es requerida';
     }
 
-    if (!employee.email) {
+    const employeesWithEqualsIdentificationNumber = await Database.get(
+      Tables.Employees,
+      'identificationNumber',
+      identificationNumber,
+    );
+
+    if (employeesWithEqualsIdentificationNumber.length) {
+      return 'El documento de identidad ya se encuentra registrado';
+    }
+  }
+
+  private async validateEmail(email: string) {
+    if (!email) {
       return 'El correo eléctronico del empleado es requerido';
     }
 
-    if (!Helper.validateEmail(employee.email)) {
+    if (!Helper.validateEmail(email)) {
       return 'El correo eléctronico no es valido';
     }
 
     const employeesWithEqualsEmail = await Database.get(
       Tables.Employees,
       'email',
-      employee.email,
+      email,
     );
 
     if (employeesWithEqualsEmail.length) {
       return 'El correo electronico ya se encuentra registrado';
     }
+  }
 
-    if (!employee.genderId) {
+  private async validateGender(genderId: string) {
+    if (!genderId) {
       return 'El genero del empleado es requerido';
     }
 
-    const gender = await Database.getById(Tables.Genders, employee.genderId);
+    const gender = await Database.getById(Tables.Genders, genderId);
 
     if (!gender) {
       return 'El genero seleccionado no existe';
     }
+  }
 
+  private validateDates(employee: EmployeeCreateOrEditViewModel) {
     if (!employee.dateOfBirth) {
       return 'La fecha de nacimiento del empleado es requerida';
     }
@@ -178,36 +242,17 @@ export class EmployeesService {
     if (!Moment.isValid(employee.dateOfHired)) {
       return 'La fecha de contratación no es valida';
     }
+  }
 
-    if (!employee.positionId) {
+  private async validatePositionId(positionId: string) {
+    if (!positionId) {
       return 'La posición del empleado es requerida';
     }
 
-    const position = await Database.getById(
-      Tables.Positions,
-      employee.positionId,
-    );
+    const position = await Database.getById(Tables.Positions, positionId);
 
     if (!position) {
       return 'La posición seleccionada no existe';
-    }
-  }
-
-  private async validateIdentificationNumber(
-    employee: EmployeeCreateOrEditViewModel,
-  ) {
-    if (!employee.identificationNumber) {
-      return 'La identificación del empleado es requerida';
-    }
-
-    const employeesWithEqualsIdentificationNumber = await Database.get(
-      Tables.Employees,
-      'identificationNumber',
-      employee.identificationNumber,
-    );
-
-    if (employeesWithEqualsIdentificationNumber.length) {
-      return 'El documento de identidad ya se encuentra registrado';
     }
   }
 
@@ -220,7 +265,7 @@ export class EmployeesService {
       name: employee.name,
       lastName: employee.lastName,
       email: employee.email,
-      gender: employee.genderId,
+      genderId: employee.genderId,
       dateOfBirth: employee.dateOfBirth,
       dateOfHired: employee.dateOfHired,
       positionId: employee.positionId,
@@ -286,5 +331,24 @@ export class EmployeesService {
     }
 
     return result.toUpperCase();
+  }
+
+  async validateContacts(
+    contacts: Array<ContactCreateOrEditViewModel>,
+  ): Promise<string> {
+    for (let index = 0; index < contacts.length; index++) {
+      if (!contacts[index].value) {
+        return 'El contacto es requerido';
+      }
+
+      const contactTypeInDb = await Database.getById(
+        Tables.ContactTypes,
+        contacts[index].contactTypeId,
+      );
+
+      if (!contactTypeInDb) {
+        return `El tipo de contacto para ${contacts[index].value} no existe`;
+      }
+    }
   }
 }

@@ -1,11 +1,10 @@
 export interface EmployeeModel {
-  id?: string;
   employeeCode: string;
   identificationNumber: string;
   name: string;
   lastName: string;
   email: string;
-  gender: string;
+  genderId: string;
   dateOfBirth: string;
   dateOfHired: string;
   positionId: string;

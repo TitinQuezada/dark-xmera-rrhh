@@ -7,4 +7,6 @@ export enum Tables {
   AcademicTrainings = 'academicTrainings',
   EmergencyContacts = 'emergencyContacts',
   Genders = 'genders',
+  ContactTypes = 'contactTypes',
+  Municipalities = 'municipalities',
 }

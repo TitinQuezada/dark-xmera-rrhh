@@ -41,7 +41,9 @@ class Database {
     const docRef = doc(this.database, tableName, id);
     const docSnap = await getDoc(docRef);
 
-    return docSnap.data();
+    if (docSnap.exists()) {
+      return { id: docSnap.id, ...docSnap.data() };
+    }
   }
 
   async get(

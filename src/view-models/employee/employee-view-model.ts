@@ -10,7 +10,7 @@ export class EmployeeViewModel {
   dateOfHired: string;
   positionId: string;
   //contacts: Array<Contact>;
-  //address: Address;
+  addressId: string;
   observations?: string;
   // academicTrainings: Array<AcademicTraining>;
   //  emergencyContacts: Array<EmergencyContact>;
