@@ -66,10 +66,17 @@ export class EmployeesService {
       const validateContactResult = await this.validateContacts(
         employee.contacts,
       );
+      const validateAddressResult = await this.validatAddress(employee.address);
 
-      if (validateEmployeeResult || validateContactResult) {
+      if (
+        validateEmployeeResult ||
+        validateContactResult ||
+        validateAddressResult
+      ) {
         return OperationResult.fail(
-          validateEmployeeResult || validateContactResult,
+          validateEmployeeResult ||
+            validateContactResult ||
+            validateAddressResult,
         );
       }
 
@@ -333,7 +340,7 @@ export class EmployeesService {
     return result.toUpperCase();
   }
 
-  async validateContacts(
+  private async validateContacts(
     contacts: Array<ContactCreateOrEditViewModel>,
   ): Promise<string> {
     for (let index = 0; index < contacts.length; index++) {
@@ -349,6 +356,33 @@ export class EmployeesService {
       if (!contactTypeInDb) {
         return `El tipo de contacto para ${contacts[index].value} no existe`;
       }
+    }
+  }
+
+  private async validatAddress(address: AddressCreateOrEditViewModel) {
+    if (!address.street) {
+      return 'La calle es requerida';
+    }
+
+    if (!address.municipalityId) {
+      return 'El municipio es requerido';
+    }
+
+    const municipalityInDb = await Database.getById(
+      Tables.Municipalities,
+      address.municipalityId,
+    );
+
+    if (!municipalityInDb) {
+      return 'El municipio seleccionado no existe';
+    }
+
+    if (!address.zipCode) {
+      return 'El código postal es requerido';
+    }
+
+    if (!address.aditionalDetail) {
+      return 'El detalle adicional de la dirección es requerido';
     }
   }
 }
