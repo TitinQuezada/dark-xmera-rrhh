@@ -67,16 +67,26 @@ export class EmployeesService {
         employee.contacts,
       );
       const validateAddressResult = await this.validatAddress(employee.address);
+      const validateAcademicTrainingsResult = this.validateAcademicTrainings(
+        employee.academicTrainings,
+      );
+      const validateEmergencyContacts = await this.validateEmergencyContacts(
+        employee.emergencyContacts,
+      );
 
       if (
         validateEmployeeResult ||
         validateContactResult ||
-        validateAddressResult
+        validateAddressResult ||
+        validateAcademicTrainingsResult ||
+        validateEmergencyContacts
       ) {
         return OperationResult.fail(
           validateEmployeeResult ||
             validateContactResult ||
-            validateAddressResult,
+            validateAddressResult ||
+            validateAcademicTrainingsResult ||
+            validateEmergencyContacts,
         );
       }
 
@@ -359,7 +369,9 @@ export class EmployeesService {
     }
   }
 
-  private async validatAddress(address: AddressCreateOrEditViewModel) {
+  private async validatAddress(
+    address: AddressCreateOrEditViewModel,
+  ): Promise<string> {
     if (!address.street) {
       return 'La calle es requerida';
     }
@@ -383,6 +395,55 @@ export class EmployeesService {
 
     if (!address.aditionalDetail) {
       return 'El detalle adicional de la dirección es requerido';
+    }
+  }
+
+  private validateAcademicTrainings(
+    academicTrainings: Array<AcademicTrainingCreateOrEditViewModel>,
+  ): string {
+    for (let index = 0; index < academicTrainings.length; index++) {
+      if (!academicTrainings[index].title) {
+        return 'El titulo obtenido es requerido';
+      }
+
+      if (!academicTrainings[index].institution) {
+        return 'La institución academica es requerida';
+      }
+    }
+  }
+
+  private async validateEmergencyContacts(
+    emergencyContacts: Array<EmergencyContactCreateOrEditViewModel>,
+  ): Promise<string> {
+    for (let index = 0; index < emergencyContacts.length; index++) {
+      if (!emergencyContacts[index].name) {
+        return 'El nombre del contacto de emergencia es requerido';
+      }
+
+      if (!emergencyContacts[index].lastname) {
+        return 'El apellido del contacto de emergencia es requerido';
+      }
+
+      if (!emergencyContacts[index].residentialPhone) {
+        return 'El telefono residencial del contacto de emergencia es requerido';
+      }
+
+      if (!emergencyContacts[index].cellPhone) {
+        return 'El celular del contacto de emergencia es requerido';
+      }
+
+      if (!emergencyContacts[index].relationshipId) {
+        return 'El parentesco del contacto de emergencia es requerido';
+      }
+
+      const relationsgipInDb = await Database.getById(
+        Tables.Relationships,
+        emergencyContacts[index].relationshipId,
+      );
+
+      if (!relationsgipInDb) {
+        return 'El parentesco seleccionado no existe';
+      }
     }
   }
 }

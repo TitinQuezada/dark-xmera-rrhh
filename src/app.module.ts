@@ -13,10 +13,12 @@ import { ContactTypeController } from './contact-type/contact-type.controller';
 import { ContactTypeService } from './contact-type/contact-type.service';
 import { MunicipalityController } from './municipality/municipality.controller';
 import { MunicipalityService } from './municipality/municipality.service';
+import { RelationshipController } from './relationship/relationship.controller';
+import { RelationshipService } from './relationship/relationship.service';
 
 @Module({
   imports: [],
-  controllers: [AppController, EmployeesController, PositionsController, DeparmentsController, GendersController, ContactTypeController, MunicipalityController],
-  providers: [AppService, EmployeesService, PositionsService, DeparmentsService, GendersService, ContactTypeService, MunicipalityService],
+  controllers: [AppController, EmployeesController, PositionsController, DeparmentsController, GendersController, ContactTypeController, MunicipalityController, RelationshipController],
+  providers: [AppService, EmployeesService, PositionsService, DeparmentsService, GendersService, ContactTypeService, MunicipalityService, RelationshipService],
 })
 export class AppModule {}

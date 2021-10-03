@@ -9,4 +9,5 @@ export enum Tables {
   Genders = 'genders',
   ContactTypes = 'contactTypes',
   Municipalities = 'municipalities',
+  Relationships = 'relationships',
 }
