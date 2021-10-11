@@ -26,19 +26,14 @@ jobs:
           npm install
           npm run build --if-present
 
-      - name: compress node_modules
-        uses: papeloto/action-zip@v1
-        with:
-          files: node_modules
-          dest: node_modules.zip
-
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v2
         with:
           name: node-app
           path: |
             dist
-            node_modules.zip
+            package-lock.json
+            package.json
 
   deploy:
     runs-on: ubuntu-latest
@@ -58,8 +53,9 @@ jobs:
         with:
           name: node-app
 
-      - name: Extract node modules
-        run: 7z x node_modules.zip -o\node_modules/
+      - name: install node modules
+        run: |
+          npm install
 
       - name: 'Deploy to Azure Web App'
         id: deploy-to-webapp
