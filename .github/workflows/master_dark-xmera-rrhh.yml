@@ -16,7 +16,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: ${{ System.DefaultWorkingDirectory }}
+      - name: Set up Node.js version
         uses: actions/setup-node@v1
         with:
           node-version: '14.x'
@@ -25,7 +25,6 @@ jobs:
         run: |
           npm install
           npm run build --if-present
-        working-directory: .
 
   deploy:
     runs-on: ubuntu-latest
@@ -42,4 +41,4 @@ jobs:
           app-name: 'dark-xmera-rrhh'
           slot-name: 'Production'
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_9D27977CBB1E4C5BB5932153D8FE42F3 }}
-          package: .
+          package: ./dist
