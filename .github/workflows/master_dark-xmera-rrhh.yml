@@ -25,7 +25,7 @@ jobs:
         run: |
           npm install
           npm run build --if-present
-        working-directory: .
+        working-directory: ./dist
 
   deploy:
     runs-on: ubuntu-latest
@@ -42,4 +42,4 @@ jobs:
           app-name: 'dark-xmera-rrhh'
           slot-name: 'Production'
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_9D27977CBB1E4C5BB5932153D8FE42F3 }}
-          package: ${{ System.DefaultWorkingDirectory }}
+          package: .
