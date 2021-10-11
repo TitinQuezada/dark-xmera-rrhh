@@ -2,16 +2,20 @@ import { Injectable } from '@nestjs/common';
 import { DocumentData } from 'firebase/firestore';
 import { Tables } from 'src/enums/tables.enum';
 import { RelationshipModel } from 'src/models/employee/relationship-model';
-import Database from 'src/utils/database';
+import { DatabaseService } from 'src/utils/database.service';
 import { OperationResult } from 'src/utils/operation-result';
 import { RelationshipCreateOrEditViewModel } from 'src/view-models/relationship/relationship-create-or-edit-view-model';
 import { RelationshipViewModel } from 'src/view-models/relationship/relationship-view-model';
 
 @Injectable()
 export class RelationshipService {
+  constructor(private readonly databaseService: DatabaseService) {}
+
   async getAll(): Promise<OperationResult<Array<RelationshipViewModel>>> {
     try {
-      const relationships = await Database.getAll(Tables.Relationships);
+      const relationships = await this.databaseService.getAll(
+        Tables.Relationships,
+      );
       const relationshipsResult = relationships.map((relationship) =>
         this.buildRelationship(relationship),
       );
@@ -24,7 +28,10 @@ export class RelationshipService {
 
   async getById(id: string): Promise<OperationResult<RelationshipViewModel>> {
     try {
-      const relationship = await Database.getById(Tables.Relationships, id);
+      const relationship = await this.databaseService.getById(
+        Tables.Relationships,
+        id,
+      );
 
       if (!relationship) {
         return OperationResult.fail('Parentesco no encontrado');
@@ -57,7 +64,10 @@ export class RelationshipService {
 
       const contactTypeToCreate = this.buildRelationshipModel(contactType);
 
-      await Database.create(Tables.Relationships, contactTypeToCreate);
+      await this.databaseService.create(
+        Tables.Relationships,
+        contactTypeToCreate,
+      );
 
       return OperationResult.ok();
     } catch (error) {
@@ -97,7 +107,11 @@ export class RelationshipService {
         relationship,
       );
 
-      await Database.update(Tables.Relationships, id, relationshipToUpdate);
+      await this.databaseService.update(
+        Tables.Relationships,
+        id,
+        relationshipToUpdate,
+      );
 
       return OperationResult.ok();
     } catch (error) {
@@ -107,7 +121,7 @@ export class RelationshipService {
 
   async delete(id: string): Promise<OperationResult<void>> {
     try {
-      await Database.delete(Tables.Relationships, id);
+      await this.databaseService.delete(Tables.Relationships, id);
 
       return OperationResult.ok();
     } catch (error) {

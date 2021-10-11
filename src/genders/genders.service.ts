@@ -2,16 +2,18 @@ import { DocumentData } from '@firebase/firestore';
 import { Injectable } from '@nestjs/common';
 import { Tables } from 'src/enums/tables.enum';
 import { GenderModel } from 'src/models/gender/gender-model.interface';
-import Database from 'src/utils/database';
+import { DatabaseService } from 'src/utils/database.service';
 import { OperationResult } from 'src/utils/operation-result';
 import { GenderCreateOrEditViewModel } from 'src/view-models/gender/gender-create-or-edit-view-model';
 import { GenderViewModel } from 'src/view-models/gender/gender-view-model';
 
 @Injectable()
 export class GendersService {
+  constructor(private readonly databaseService: DatabaseService) {}
+
   async getAll(): Promise<OperationResult<Array<GenderViewModel>>> {
     try {
-      const genders = await Database.getAll(Tables.Genders);
+      const genders = await this.databaseService.getAll(Tables.Genders);
       const gendersResult = genders.map((gender) => this.buildGender(gender));
 
       return OperationResult.ok(gendersResult);
@@ -22,7 +24,7 @@ export class GendersService {
 
   async getById(id: string): Promise<OperationResult<GenderViewModel>> {
     try {
-      const gender = await Database.getById(Tables.Genders, id);
+      const gender = await this.databaseService.getById(Tables.Genders, id);
 
       if (!gender) {
         return OperationResult.fail('Genero no encontrado');
@@ -55,7 +57,7 @@ export class GendersService {
 
       const genderToCreate = this.buildGenderModel(gender);
 
-      await Database.create(Tables.Genders, genderToCreate);
+      await this.databaseService.create(Tables.Genders, genderToCreate);
 
       return OperationResult.ok();
     } catch (error) {
@@ -90,7 +92,7 @@ export class GendersService {
 
       const genderToUpdate = await this.buildGenderModel(deparment);
 
-      await Database.update(Tables.Genders, id, genderToUpdate);
+      await this.databaseService.update(Tables.Genders, id, genderToUpdate);
 
       return OperationResult.ok();
     } catch (error) {
@@ -100,7 +102,7 @@ export class GendersService {
 
   async delete(id: string): Promise<OperationResult<void>> {
     try {
-      await Database.delete(Tables.Genders, id);
+      await this.databaseService.delete(Tables.Genders, id);
 
       return OperationResult.ok();
     } catch (error) {

@@ -2,16 +2,20 @@ import { Injectable } from '@nestjs/common';
 import { DocumentData } from 'firebase/firestore';
 import { Tables } from 'src/enums/tables.enum';
 import { MunicipalityModel } from 'src/models/municipality/municipality-model';
-import Database from 'src/utils/database';
+import { DatabaseService } from 'src/utils/database.service';
 import { OperationResult } from 'src/utils/operation-result';
 import { MunicipalityCreateOrEditViewModel } from 'src/view-models/municipality/municipality-create-or-edit-view-model';
 import { MunicipalityViewModel } from 'src/view-models/municipality/municipality-view-model';
 
 @Injectable()
 export class MunicipalityService {
+  constructor(private readonly databaseService: DatabaseService) {}
+
   async getAll(): Promise<OperationResult<Array<MunicipalityViewModel>>> {
     try {
-      const municipalities = await Database.getAll(Tables.Municipalities);
+      const municipalities = await this.databaseService.getAll(
+        Tables.Municipalities,
+      );
       const municipalitiesResult = municipalities.map((municipality) =>
         this.buildMunicipality(municipality),
       );
@@ -24,7 +28,10 @@ export class MunicipalityService {
 
   async getById(id: string): Promise<OperationResult<MunicipalityViewModel>> {
     try {
-      const municipality = await Database.getById(Tables.Municipalities, id);
+      const municipality = await this.databaseService.getById(
+        Tables.Municipalities,
+        id,
+      );
 
       if (!municipality) {
         return OperationResult.fail('Municipio no encontrado');
@@ -58,7 +65,10 @@ export class MunicipalityService {
 
       const municipalityToCreate = this.buildMunicipalityModel(municipality);
 
-      await Database.create(Tables.Municipalities, municipalityToCreate);
+      await this.databaseService.create(
+        Tables.Municipalities,
+        municipalityToCreate,
+      );
 
       return OperationResult.ok();
     } catch (error) {
@@ -97,7 +107,11 @@ export class MunicipalityService {
         municipality,
       );
 
-      await Database.update(Tables.Municipalities, id, municipalityToUpdate);
+      await this.databaseService.update(
+        Tables.Municipalities,
+        id,
+        municipalityToUpdate,
+      );
 
       return OperationResult.ok();
     } catch (error) {
@@ -107,7 +121,7 @@ export class MunicipalityService {
 
   async delete(id: string): Promise<OperationResult<void>> {
     try {
-      await Database.delete(Tables.Municipalities, id);
+      await this.databaseService.delete(Tables.Municipalities, id);
 
       return OperationResult.ok();
     } catch (error) {

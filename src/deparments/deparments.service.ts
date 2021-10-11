@@ -2,16 +2,18 @@ import { Injectable } from '@nestjs/common';
 import { DocumentData } from 'firebase/firestore';
 import { Tables } from 'src/enums/tables.enum';
 import { DeparmentModel } from 'src/models/deparment/deparment-model.interface';
-import Database from 'src/utils/database';
+import { DatabaseService } from 'src/utils/database.service';
 import { OperationResult } from 'src/utils/operation-result';
 import { DeparmentCreateOrEditViewModel } from 'src/view-models/deparment/deparment-create-or-edit-view-model';
 import { DeparmentViewModel } from 'src/view-models/deparment/deparment-view-model';
 
 @Injectable()
 export class DeparmentsService {
+  constructor(private readonly databaseService: DatabaseService) {}
+
   async getAll(): Promise<OperationResult<Array<DeparmentViewModel>>> {
     try {
-      const deparments = await Database.getAll(Tables.Deparments);
+      const deparments = await this.databaseService.getAll(Tables.Deparments);
       const deparmentResult = deparments.map((deparment) =>
         this.buildDeparment(deparment),
       );
@@ -24,7 +26,10 @@ export class DeparmentsService {
 
   async getById(id: string): Promise<OperationResult<DeparmentViewModel>> {
     try {
-      const deparment = await Database.getById(Tables.Deparments, id);
+      const deparment = await this.databaseService.getById(
+        Tables.Deparments,
+        id,
+      );
 
       if (!deparment) {
         return OperationResult.fail('Departamento no encontrado');
@@ -61,7 +66,7 @@ export class DeparmentsService {
       const deparmentToCreate = await this.buildDeparmentModel(deparment);
       deparmentToCreate.createdDate = new Date();
 
-      await Database.create(Tables.Deparments, deparmentToCreate);
+      await this.databaseService.create(Tables.Deparments, deparmentToCreate);
 
       return OperationResult.ok();
     } catch (error) {
@@ -97,14 +102,21 @@ export class DeparmentsService {
         return OperationResult.fail(validateDeparmentResult);
       }
 
-      const deparmentInDb = await Database.getById(Tables.Deparments, id);
+      const deparmentInDb = await this.databaseService.getById(
+        Tables.Deparments,
+        id,
+      );
 
       const deparmentToUpdate = await this.buildDeparmentModel(deparment);
 
       deparmentToUpdate.createdDate = deparmentInDb.createdDate;
       deparmentToUpdate.updatedDate = new Date();
 
-      await Database.update(Tables.Deparments, id, deparmentToUpdate);
+      await this.databaseService.update(
+        Tables.Deparments,
+        id,
+        deparmentToUpdate,
+      );
 
       return OperationResult.ok();
     } catch (error) {
@@ -114,7 +126,11 @@ export class DeparmentsService {
 
   async delete(id: string): Promise<OperationResult<void>> {
     try {
-      const positions = await Database.get(Tables.Positions, 'deparmentId', id);
+      const positions = await this.databaseService.get(
+        Tables.Positions,
+        'deparmentId',
+        id,
+      );
 
       if (positions.length) {
         return OperationResult.fail(
@@ -122,7 +138,7 @@ export class DeparmentsService {
         );
       }
 
-      await Database.delete(Tables.Deparments, id);
+      await this.databaseService.delete(Tables.Deparments, id);
 
       return OperationResult.ok();
     } catch (error) {

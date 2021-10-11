@@ -2,16 +2,20 @@ import { Injectable } from '@nestjs/common';
 import { DocumentData } from 'firebase/firestore';
 import { Tables } from 'src/enums/tables.enum';
 import { ContactTypeModel } from 'src/models/employee/contact-type-model';
-import Database from 'src/utils/database';
+import { DatabaseService } from 'src/utils/database.service';
 import { OperationResult } from 'src/utils/operation-result';
 import { ContactTypeCreateOrEditViewModel } from 'src/view-models/contact-type/contact-type-create-or-edit-view-model';
 import { ContactTypeViewModel } from 'src/view-models/contact-type/contact-type-view-model-';
 
 @Injectable()
 export class ContactTypeService {
+  constructor(private readonly databaseService: DatabaseService) {}
+
   async getAll(): Promise<OperationResult<Array<ContactTypeViewModel>>> {
     try {
-      const contactTypes = await Database.getAll(Tables.ContactTypes);
+      const contactTypes = await this.databaseService.getAll(
+        Tables.ContactTypes,
+      );
       const contactTypesResult = contactTypes.map((contactType) =>
         this.buildContactType(contactType),
       );
@@ -24,8 +28,11 @@ export class ContactTypeService {
 
   async getById(id: string): Promise<OperationResult<ContactTypeViewModel>> {
     try {
-      const contactType = await Database.getById(Tables.ContactTypes, id);
-      console.log(contactType);
+      const contactType = await this.databaseService.getById(
+        Tables.ContactTypes,
+        id,
+      );
+      // console.log(contactType);
 
       if (!contactType) {
         return OperationResult.fail('Tipo de contacto no encontrado');
@@ -58,7 +65,10 @@ export class ContactTypeService {
 
       const contactTypeToCreate = this.buildContactTypeModel(contactType);
 
-      await Database.create(Tables.ContactTypes, contactTypeToCreate);
+      await this.databaseService.create(
+        Tables.ContactTypes,
+        contactTypeToCreate,
+      );
 
       return OperationResult.ok();
     } catch (error) {
@@ -95,7 +105,11 @@ export class ContactTypeService {
 
       const genderToUpdate = await this.buildContactTypeModel(contactType);
 
-      await Database.update(Tables.ContactTypes, id, genderToUpdate);
+      await this.databaseService.update(
+        Tables.ContactTypes,
+        id,
+        genderToUpdate,
+      );
 
       return OperationResult.ok();
     } catch (error) {
@@ -105,7 +119,7 @@ export class ContactTypeService {
 
   async delete(id: string): Promise<OperationResult<void>> {
     try {
-      await Database.delete(Tables.ContactTypes, id);
+      await this.databaseService.delete(Tables.ContactTypes, id);
 
       return OperationResult.ok();
     } catch (error) {

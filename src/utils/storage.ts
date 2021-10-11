@@ -7,13 +7,11 @@ import {
   getDownloadURL,
 } from 'firebase/storage';
 
-import FirebaseConfiguration from '../configuration/firebase.configuration';
-
 class Storage {
   storage: FirebaseStorage;
 
   constructor() {
-    const firebaseApp = initializeApp(FirebaseConfiguration);
+    const firebaseApp = initializeApp({});
     this.storage = getStorage(firebaseApp);
   }
 

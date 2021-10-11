@@ -6,6 +6,7 @@ import { AddressModel } from 'src/models/employee/address-model.interface';
 import { ContactModel } from 'src/models/employee/contact-model';
 import { EmergencyContactModel } from 'src/models/employee/emergency-contact-model.interface';
 import { EmployeeModel } from 'src/models/employee/employee.-model.interface';
+import { DatabaseService } from 'src/utils/database.service';
 import Helper from 'src/utils/helper';
 import Moment from 'src/utils/moment';
 import { OperationResult } from 'src/utils/operation-result';
@@ -15,13 +16,14 @@ import { ContactCreateOrEditViewModel } from 'src/view-models/contact/contact-cr
 import { EmergencyContactCreateOrEditViewModel } from 'src/view-models/emergency-contact/emergency-contact-create-or-edit-view-model';
 import { EmployeeCreateOrEditViewModel } from 'src/view-models/employee/employee-create-or-edit-view-model';
 import { EmployeeViewModel } from 'src/view-models/employee/employee-view-model';
-import Database from '../utils/database';
 
 @Injectable()
 export class EmployeesService {
+  constructor(private readonly databaseService: DatabaseService) {}
+
   async getAll(): Promise<OperationResult<Array<EmployeeViewModel>>> {
     try {
-      const employees = await Database.getAll(Tables.Employees);
+      const employees = await this.databaseService.getAll(Tables.Employees);
       const employeesResult = employees.map((employee) =>
         this.buildEmployee(employee),
       );
@@ -91,14 +93,17 @@ export class EmployeesService {
       }
 
       const addressToCreate = this.buildAddressModel(employee.address);
-      const addressId = await Database.create(Tables.Address, addressToCreate);
+      const addressId = await this.databaseService.create(
+        Tables.Address,
+        addressToCreate,
+      );
 
       const employeeToCreate = this.buildEmployeeModel(employee);
 
       employeeToCreate.employeeCode = this.generateCode(employee);
       employeeToCreate.addressId = addressId;
 
-      const createdEmployeeId = await Database.create(
+      const createdEmployeeId = await this.databaseService.create(
         Tables.Employees,
         employeeToCreate,
       );
@@ -109,7 +114,7 @@ export class EmployeesService {
           createdEmployeeId,
         );
 
-        await Database.create(Tables.Contacts, contactToCreate);
+        await this.databaseService.create(Tables.Contacts, contactToCreate);
       }
 
       for (let index = 0; index < employee.academicTrainings.length; index++) {
@@ -118,7 +123,7 @@ export class EmployeesService {
           createdEmployeeId,
         );
 
-        await Database.create(
+        await this.databaseService.create(
           Tables.AcademicTrainings,
           academicTrainingToCreate,
         );
@@ -130,7 +135,7 @@ export class EmployeesService {
           createdEmployeeId,
         );
 
-        await Database.create(
+        await this.databaseService.create(
           Tables.EmergencyContacts,
           emergencyContactToCreate,
         );
@@ -200,11 +205,12 @@ export class EmployeesService {
       return 'La identificación del empleado es requerida';
     }
 
-    const employeesWithEqualsIdentificationNumber = await Database.get(
-      Tables.Employees,
-      'identificationNumber',
-      identificationNumber,
-    );
+    const employeesWithEqualsIdentificationNumber =
+      await this.databaseService.get(
+        Tables.Employees,
+        'identificationNumber',
+        identificationNumber,
+      );
 
     if (employeesWithEqualsIdentificationNumber.length) {
       return 'El documento de identidad ya se encuentra registrado';
@@ -220,7 +226,7 @@ export class EmployeesService {
       return 'El correo eléctronico no es valido';
     }
 
-    const employeesWithEqualsEmail = await Database.get(
+    const employeesWithEqualsEmail = await this.databaseService.get(
       Tables.Employees,
       'email',
       email,
@@ -236,7 +242,7 @@ export class EmployeesService {
       return 'El genero del empleado es requerido';
     }
 
-    const gender = await Database.getById(Tables.Genders, genderId);
+    const gender = await this.databaseService.getById(Tables.Genders, genderId);
 
     if (!gender) {
       return 'El genero seleccionado no existe';
@@ -266,7 +272,10 @@ export class EmployeesService {
       return 'La posición del empleado es requerida';
     }
 
-    const position = await Database.getById(Tables.Positions, positionId);
+    const position = await this.databaseService.getById(
+      Tables.Positions,
+      positionId,
+    );
 
     if (!position) {
       return 'La posición seleccionada no existe';
@@ -358,7 +367,7 @@ export class EmployeesService {
         return 'El contacto es requerido';
       }
 
-      const contactTypeInDb = await Database.getById(
+      const contactTypeInDb = await this.databaseService.getById(
         Tables.ContactTypes,
         contacts[index].contactTypeId,
       );
@@ -380,7 +389,7 @@ export class EmployeesService {
       return 'El municipio es requerido';
     }
 
-    const municipalityInDb = await Database.getById(
+    const municipalityInDb = await this.databaseService.getById(
       Tables.Municipalities,
       address.municipalityId,
     );
@@ -436,7 +445,7 @@ export class EmployeesService {
         return 'El parentesco del contacto de emergencia es requerido';
       }
 
-      const relationsgipInDb = await Database.getById(
+      const relationsgipInDb = await this.databaseService.getById(
         Tables.Relationships,
         emergencyContacts[index].relationshipId,
       );

@@ -5,13 +5,14 @@ import { PositionModel } from 'src/models/employee/position-model.interface';
 import { OperationResult } from 'src/utils/operation-result';
 import { PositionCreateOrEditViewModel } from 'src/view-models/position/position-create-or-edit-view-model';
 import { PositionViewModel } from 'src/view-models/position/position-view-model';
-import Database from '../utils/database';
+import { DatabaseService } from '../utils/database.service';
 
 @Injectable()
 export class PositionsService {
+  constructor(private readonly databaseService: DatabaseService) {}
   async getAll(): Promise<OperationResult<Array<PositionViewModel>>> {
     try {
-      const positions = await Database.getAll(Tables.Positions);
+      const positions = await this.databaseService.getAll(Tables.Positions);
 
       const positionsResult = positions.map((position) =>
         this.buildPosition(position),
@@ -25,7 +26,7 @@ export class PositionsService {
 
   async getById(id: string): Promise<OperationResult<PositionViewModel>> {
     try {
-      const position = await Database.getById(Tables.Positions, id);
+      const position = await this.databaseService.getById(Tables.Positions, id);
 
       if (!position) {
         return OperationResult.fail('Posición no encontrada');
@@ -62,7 +63,7 @@ export class PositionsService {
       const positionToCreate = this.buildPositionModel(position);
       positionToCreate.createdDate = new Date();
 
-      await Database.create(Tables.Positions, positionToCreate);
+      await this.databaseService.create(Tables.Positions, positionToCreate);
 
       return OperationResult.ok();
     } catch (error) {
@@ -79,7 +80,7 @@ export class PositionsService {
       return 'El departamento de la posición es requerido';
     }
 
-    const deparment = await Database.getById(
+    const deparment = await this.databaseService.getById(
       Tables.Deparments,
       position.deparmentId,
     );
@@ -111,13 +112,16 @@ export class PositionsService {
         return OperationResult.fail(validatePositionResult);
       }
 
-      const positionInDb = await Database.getById(Tables.Positions, id);
+      const positionInDb = await this.databaseService.getById(
+        Tables.Positions,
+        id,
+      );
       const positionToUpdate = this.buildPositionModel(position);
 
       positionToUpdate.createdDate = positionInDb.createdDate;
       positionToUpdate.updatedDate = new Date();
 
-      await Database.update(Tables.Positions, id, positionToUpdate);
+      await this.databaseService.update(Tables.Positions, id, positionToUpdate);
 
       return OperationResult.ok();
     } catch (error) {
@@ -127,7 +131,7 @@ export class PositionsService {
 
   async delete(id: string): Promise<OperationResult<void>> {
     try {
-      await Database.delete(Tables.Positions, id);
+      await this.databaseService.delete(Tables.Positions, id);
 
       return OperationResult.ok();
     } catch (error) {

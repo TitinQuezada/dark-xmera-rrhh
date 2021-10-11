@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
+//import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { EmployeesController } from './employees/employees.controller';
 import { EmployeesService } from './employees/employees.service';
@@ -15,10 +15,31 @@ import { MunicipalityController } from './municipality/municipality.controller';
 import { MunicipalityService } from './municipality/municipality.service';
 import { RelationshipController } from './relationship/relationship.controller';
 import { RelationshipService } from './relationship/relationship.service';
+import { ConfigModule } from '@nestjs/config';
+import { DatabaseService } from './utils/database.service';
 
 @Module({
-  imports: [],
-  controllers: [AppController, EmployeesController, PositionsController, DeparmentsController, GendersController, ContactTypeController, MunicipalityController, RelationshipController],
-  providers: [AppService, EmployeesService, PositionsService, DeparmentsService, GendersService, ContactTypeService, MunicipalityService, RelationshipService],
+  imports: [ConfigModule.forRoot()],
+  controllers: [
+    // AppController,
+    EmployeesController,
+    PositionsController,
+    DeparmentsController,
+    GendersController,
+    ContactTypeController,
+    MunicipalityController,
+    RelationshipController,
+  ],
+  providers: [
+    AppService,
+    EmployeesService,
+    PositionsService,
+    DeparmentsService,
+    GendersService,
+    ContactTypeService,
+    MunicipalityService,
+    RelationshipService,
+    DatabaseService,
+  ],
 })
 export class AppModule {}
