@@ -27,7 +27,7 @@ jobs:
           npm run build --if-present
 
       - name: compress node_modules
-         uses: thedoctor0/zip-release@master
+        uses: thedoctor0/zip-release@master
         with:
           path: 'node_modules'
           type: 'tar'
