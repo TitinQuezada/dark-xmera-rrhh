@@ -4,6 +4,12 @@
 name: Build and deploy Node.js app to Azure Web App - dark-xmera-rrhh
 
 on:
+  pull_request_target:
+    branches:
+      - master
+    types:
+      - closed
+
   push:
     branches:
       - master
@@ -46,7 +52,10 @@ jobs:
       - name: Remove Files
         uses: JesseTG/rm@v1.0.2
         with:
-          path: dist
+          path: |
+            dist
+            package-lock.json
+            package.json
 
       - name: Download artifact from build job
         uses: actions/download-artifact@v2
