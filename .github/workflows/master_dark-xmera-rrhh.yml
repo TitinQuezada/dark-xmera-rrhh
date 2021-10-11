@@ -4,12 +4,6 @@
 name: Build and deploy Node.js app to Azure Web App - dark-xmera-rrhh
 
 on:
-  pull_request_target:
-    branches:
-      - master
-    types:
-      - closed
-
   push:
     branches:
       - master
