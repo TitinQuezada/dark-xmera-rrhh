@@ -59,7 +59,7 @@ jobs:
           name: node-app
 
       - name: Extract node modules
-        run: 7z x node_modules.zip
+        run: 7z x node_modules.zip -o\node_modules
 
       - name: 'Deploy to Azure Web App'
         id: deploy-to-webapp
