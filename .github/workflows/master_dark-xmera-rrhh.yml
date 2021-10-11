@@ -1,8 +1,17 @@
-trigger:
-  - master
+# Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
+# More GitHub Actions for Azure: https://github.com/Azure/actions
 
-pool:
-  vmImage: 'ubuntu-latest'
+name: Build and deploy Node.js app to Azure Web App - dark-xmera-rrhh
+
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
 
 steps:
   - task: NodeTool@0
