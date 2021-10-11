@@ -41,4 +41,4 @@ jobs:
           app-name: 'dark-xmera-rrhh'
           slot-name: 'Production'
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_9D27977CBB1E4C5BB5932153D8FE42F3 }}
-          package: ./app
+          package: .
