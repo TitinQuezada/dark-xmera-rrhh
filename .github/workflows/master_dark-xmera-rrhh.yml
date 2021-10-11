@@ -27,7 +27,7 @@ jobs:
           npm run build --if-present
 
       - name: CopyFiles@2
-        inputs:
+        uses:
           Contents: 'package*.json'
           TargetFolder: 'dist'
 
