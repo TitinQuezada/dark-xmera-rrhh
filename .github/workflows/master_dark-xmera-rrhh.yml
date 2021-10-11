@@ -1,36 +1,41 @@
-# Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
-# More GitHub Actions for Azure: https://github.com/Azure/actions
+trigger:
+  - master
 
-name: Build and deploy Node.js app to Azure Web App - dark-xmera-rrhh
+pool:
+  vmImage: 'ubuntu-latest'
 
-on:
-  push:
-    branches:
-      - master
-  workflow_dispatch:
+steps:
+  - task: NodeTool@0
+    inputs:
+      versionSpec: 14.x'
+    displayName: 'Install Node.js'
 
-jobs:
-  build:
-    runs-on: ubuntu-latest
+  - script: |
+      npm ci
+      npm run build
+    displayName: 'npm install and build'
 
-    steps:
-      - uses: actions/checkout@v2
+  - task: CopyFiles@2
+    inputs:
+      Contents: 'package*.json'
+      TargetFolder: 'dist'
 
-      - name: Set up Node.js version
-        uses: actions/setup-node@v1
-        with:
-          node-version: '14.x'
+  - task: Npm@1
+    inputs:
+      command: 'custom'
+      workingDir: 'dist'
+      customCommand: 'ci --production'
 
-      - name: npm install, build, and test
-        run: |
-          npm install
-          npm run build --if-present
+  - task: ArchiveFiles@2
+    inputs:
+      rootFolderOrFile: 'dist'
+      includeRootFolder: true
+      archiveType: 'zip'
+      archiveFile: 'dist.zip'
+      replaceExistingArchive: true
 
-      - name: 'Deploy to Azure Web App'
-        id: deploy-to-webapp
-        uses: azure/webapps-deploy@v2
-        with:
-          app-name: 'dark-xmera-rrhh'
-          slot-name: 'Production'
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_9D27977CBB1E4C5BB5932153D8FE42F3 }}
-          package: .
+  - task: PublishBuildArtifacts@1
+    inputs:
+      PathtoPublish: 'dist.zip'
+      ArtifactName: 'NestDemo'
+      publishLocation: 'Container'
