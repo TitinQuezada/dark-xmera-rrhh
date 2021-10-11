@@ -39,7 +39,7 @@ jobs:
           name: node-app
           path: |
             dist
-            node_modules.zip
+            node_modules.tar.gz
 
   deploy:
     runs-on: ubuntu-latest
