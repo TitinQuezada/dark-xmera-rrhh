@@ -27,10 +27,11 @@ jobs:
           npm run build --if-present
 
       - name: compress node_modules
-        uses: papeloto/action-zip@v1
+         uses: thedoctor0/zip-release@master
         with:
-          files: node_modules
-          dest: node_modules.zip
+          path: 'node_modules'
+          type: 'tar'
+          filename: 'node_modules.tar.gz'
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v2
@@ -59,7 +60,7 @@ jobs:
           name: node-app
 
       - name: Extract node modules
-        run: 7z x node_modules.zip -o\node_modules
+        run: 7z x node_modules.zip -o\node_modules/
 
       - name: 'Deploy to Azure Web App'
         id: deploy-to-webapp
