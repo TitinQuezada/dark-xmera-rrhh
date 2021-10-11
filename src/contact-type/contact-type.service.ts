@@ -32,7 +32,6 @@ export class ContactTypeService {
         Tables.ContactTypes,
         id,
       );
-      // console.log(contactType);
 
       if (!contactType) {
         return OperationResult.fail('Tipo de contacto no encontrado');
