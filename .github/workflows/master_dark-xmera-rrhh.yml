@@ -13,38 +13,33 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
-steps:
-  - task: NodeTool@0
-    inputs:
-      versionSpec: 14.x'
-    displayName: 'Install Node.js'
+    steps:
+      - uses: actions/checkout@v2
 
-  - script: |
-      npm ci
-      npm run build
-    displayName: 'npm install and build'
+      - name: Set up Node.js version
+        uses: actions/setup-node@v1
+        with:
+          node-version: '14.x'
 
-  - task: CopyFiles@2
-    inputs:
-      Contents: 'package*.json'
-      TargetFolder: 'dist'
+      - name: npm install, build, and test
+        run: |
+          npm install
+          npm run build --if-present
+          npm run test --if-present
 
-  - task: Npm@1
-    inputs:
-      command: 'custom'
-      workingDir: 'dist'
-      customCommand: 'ci --production'
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    environment:
+      name: 'Production'
+      url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
 
-  - task: ArchiveFiles@2
-    inputs:
-      rootFolderOrFile: 'dist'
-      includeRootFolder: true
-      archiveType: 'zip'
-      archiveFile: 'dist.zip'
-      replaceExistingArchive: true
-
-  - task: PublishBuildArtifacts@1
-    inputs:
-      PathtoPublish: 'dist.zip'
-      ArtifactName: 'NestDemo'
-      publishLocation: 'Container'
+    steps:
+      - name: 'Deploy to Azure Web App'
+        id: deploy-to-webapp
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: 'dark-xmera-rrhh'
+          slot-name: 'Production'
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_9D27977CBB1E4C5BB5932153D8FE42F3 }}
+          package: .
