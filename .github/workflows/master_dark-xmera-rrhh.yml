@@ -27,7 +27,7 @@ jobs:
           npm run build --if-present
 
       - name: compress node_modules
-      - uses: papeloto/action-zip@v1
+        uses: papeloto/action-zip@v1
         with:
           files: node_modules
           dest: node_modules.zip
